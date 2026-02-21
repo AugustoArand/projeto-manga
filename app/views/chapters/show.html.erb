@@ -1,0 +1,128 @@
+<% content_for :title, "Cap. #{@chapter.display_number} · #{@manga.title}" %>
+
+<div data-controller="reader"
+     data-reader-total-value="<%= @pages.count %>"
+     data-reader-current-value="1"
+     class="min-h-screen flex flex-col bg-manga-bg">
+
+  <%# Reader Topbar %>
+  <div class="glassmorphism sticky top-16 z-40 border-b border-manga-border">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+
+      <%# Back link %>
+      <%= link_to manga_path(@manga), class: "flex items-center gap-2 text-manga-muted hover:text-manga-neon transition-colors flex-shrink-0" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        <span class="text-sm font-semibold hidden sm:block truncate max-w-[120px]"><%= @manga.title %></span>
+      <% end %>
+
+      <%# Chapter selector %>
+      <div class="flex-1 min-w-0 text-center">
+        <select data-action="change->reader#jumpChapter"
+                class="bg-manga-card border border-manga-border text-manga-text rounded-lg px-3 py-1.5 text-sm font-semibold w-full max-w-xs focus:border-manga-neon focus:outline-none transition-colors">
+          <% @all_chapters.each do |ch| %>
+            <option value="<%= manga_chapter_path(@manga, ch) %>" <%= ch.id == @chapter.id ? 'selected' : '' %>>
+              Cap. <%= ch.display_number %> · <%= ch.title %>
+            </option>
+          <% end %>
+        </select>
+      </div>
+
+      <%# Page counter %>
+      <div class="text-manga-muted text-sm font-semibold flex-shrink-0 hidden sm:block">
+        <span data-reader-target="currentPage">1</span>/<%= @pages.count %>
+      </div>
+    </div>
+
+    <%# Progress bar %>
+    <div class="h-0.5 bg-manga-border">
+      <div class="progress-bar" data-reader-target="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <%# Pages %>
+  <main class="flex-1 flex flex-col items-center gap-0 py-4"
+        data-reader-target="pagesContainer"
+        data-action="scroll->reader#onScroll">
+    <% @pages.each_with_index do |page, index| %>
+      <div class="reader-page"
+           data-reader-target="page"
+           data-page-number="<%= index + 1 %>">
+        <img src="<%= page.image_url %>"
+             alt="Página <%= page.number %>"
+             class="w-full block"
+             loading="<%= index < 3 ? 'eager' : 'lazy' %>">
+      </div>
+    <% end %>
+
+    <%# End of chapter CTA %>
+    <div class="reader-page py-12 px-6 flex flex-col items-center gap-6 text-center">
+      <div class="w-16 h-16 rounded-full bg-gradient-to-br from-manga-neon to-manga-cyan flex items-center justify-center text-white text-2xl animate-pulse-neon">
+        ✓
+      </div>
+      <div>
+        <h3 class="font-manga-display text-3xl tracking-wider gradient-text mb-1">Fim do Capítulo</h3>
+        <p class="text-manga-muted text-sm">Cap. <%= @chapter.display_number %> · <%= @chapter.title %></p>
+      </div>
+      <div class="flex flex-wrap justify-center gap-3">
+        <% if @prev_chapter %>
+          <%= link_to manga_chapter_path(@manga, @prev_chapter), class: "btn-secondary" do %>
+            ← Cap. <%= @prev_chapter.display_number %>
+          <% end %>
+        <% end %>
+        <% if @next_chapter %>
+          <%= link_to manga_chapter_path(@manga, @next_chapter), class: "btn-primary" do %>
+            Cap. <%= @next_chapter.display_number %> →
+          <% end %>
+        <% else %>
+          <%= link_to manga_path(@manga), class: "btn-primary" do %>
+            Ver todos os caps →
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </main>
+
+  <%# Bottom navigation bar (fixed) %>
+  <div class="glassmorphism border-t border-manga-border sticky bottom-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+
+      <% if @prev_chapter %>
+        <%= link_to manga_chapter_path(@manga, @prev_chapter), class: "btn-secondary py-2 px-3 sm:px-5 text-xs" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="hidden sm:inline">Cap. <%= @prev_chapter.display_number %></span>
+        <% end %>
+      <% else %>
+        <div></div>
+      <% end %>
+
+      <%# Chapter title center %>
+      <div class="text-center min-w-0 flex-1">
+        <p class="font-manga-display text-base tracking-wider gradient-text truncate">
+          Cap. <%= @chapter.display_number %>
+        </p>
+        <p class="text-manga-muted text-xs truncate"><%= @chapter.title %></p>
+      </div>
+
+      <% if @next_chapter %>
+        <%= link_to manga_chapter_path(@manga, @next_chapter), class: "btn-primary py-2 px-3 sm:px-5 text-xs" do %>
+          <span class="hidden sm:inline">Cap. <%= @next_chapter.display_number %></span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        <% end %>
+      <% else %>
+        <%= link_to manga_path(@manga), class: "btn-secondary py-2 px-3 sm:px-5 text-xs" do %>
+          <span>Lista</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+</div>

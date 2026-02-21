@@ -1,0 +1,119 @@
+<% content_for :title, @manga.title %>
+<% content_for :description, @manga.description %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <%# Breadcrumb %>
+  <nav class="flex items-center gap-2 text-sm text-manga-muted mb-6">
+    <%= link_to "Catálogo", mangas_path, class: "hover:text-manga-neon transition-colors" %>
+    <span class="text-manga-border">/</span>
+    <span class="text-manga-text font-medium truncate"><%= @manga.title %></span>
+  </nav>
+
+  <%# Hero Detail Section %>
+  <section class="flex flex-col md:flex-row gap-8 mb-12">
+
+    <%# Cover %>
+    <div class="flex-shrink-0 mx-auto md:mx-0">
+      <div class="w-48 sm:w-56 md:w-64 relative group">
+        <div class="absolute inset-0 bg-gradient-to-br from-manga-neon/20 to-manga-cyan/20 rounded-xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100"></div>
+        <img src="<%= @manga.cover_url %>"
+             alt="<%= @manga.title %>"
+             class="w-full aspect-[2/3] object-cover rounded-xl shadow-2xl relative z-10 border border-manga-border"
+             onerror="this.src='https://placehold.co/400x600/1E1E24/E040FB?text=<%= ERB::Util.url_encode(@manga.title) %>&font=playfair-display'">
+      </div>
+    </div>
+
+    <%# Info %>
+    <div class="flex-1 min-w-0 animate-fade-in-up">
+      <%# Genre & Status %>
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span class="genre-chip active"><%= @manga.genre %></span>
+        <span class="status-badge <%= @manga.status == 'Em andamento' ? 'ongoing' : @manga.status == 'Completo' ? 'completed' : 'hiatus' %>">
+          <%= @manga.status == 'Em andamento' ? '● Em andamento' : @manga.status == 'Completo' ? '✓ Completo' : '⏸ Hiatus' %>
+        </span>
+      </div>
+
+      <h1 class="font-manga-display text-4xl sm:text-5xl lg:text-6xl tracking-wider text-manga-text mb-2">
+        <%= @manga.title %>
+      </h1>
+      <p class="text-manga-muted text-base mb-4">por <span class="text-manga-cyan font-bold"><%= @manga.author %></span></p>
+
+      <%# Rating %>
+      <div class="flex items-center gap-2 mb-6">
+        <div class="flex gap-0.5">
+          <% rating_full = @manga.rating.to_i %>
+          <% 5.times do |i| %>
+            <span class="<%= i < (rating_full / 2) ? 'rating-star' : 'text-manga-border' %> text-lg">★</span>
+          <% end %>
+        </div>
+        <span class="text-manga-text font-bold text-xl"><%= @manga.rating %></span>
+        <span class="text-manga-muted text-sm">/ 10</span>
+      </div>
+
+      <%# Description %>
+      <p class="text-manga-muted leading-relaxed text-sm sm:text-base mb-8 max-w-2xl">
+        <%= @manga.description %>
+      </p>
+
+      <%# Action buttons %>
+      <div class="flex flex-wrap gap-3">
+        <% if (first_chapter = @manga.chapters.order(number: :asc).first) %>
+          <%= link_to "▶ Ler do Início", manga_chapter_path(@manga, first_chapter), class: "btn-primary" %>
+        <% end %>
+        <% if (last_chapter = @manga.chapters.order(number: :desc).first) %>
+          <%= link_to "⚡ Último Capítulo", manga_chapter_path(@manga, last_chapter), class: "btn-secondary" %>
+        <% end %>
+      </div>
+
+      <%# Quick stats %>
+      <div class="flex gap-6 mt-8 pt-6 border-t border-manga-border">
+        <div>
+          <p class="font-manga-display text-2xl neon-text"><%= @manga.chapters.count %></p>
+          <p class="text-manga-muted text-xs uppercase tracking-wider">Capítulos</p>
+        </div>
+        <div>
+          <p class="font-manga-display text-2xl cyan-text"><%= Page.joins(:chapter).where(chapters: { manga_id: @manga.id }).count %></p>
+          <p class="text-manga-muted text-xs uppercase tracking-wider">Páginas</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# Chapters List %>
+  <section>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-manga-display text-2xl tracking-wider">
+        <span class="gradient-text">CAPÍTULOS</span>
+      </h2>
+      <span class="text-manga-muted text-sm"><%= @chapters.count %> capítulos</span>
+    </div>
+
+    <div class="space-y-2">
+      <% @chapters.each do |chapter| %>
+        <%= link_to manga_chapter_path(@manga, chapter), class: "chapter-row" do %>
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="flex-shrink-0 w-10 h-10 rounded-lg bg-manga-bg flex items-center justify-center font-manga-display text-lg neon-text border border-manga-border">
+              <%= chapter.display_number %>
+            </span>
+            <div class="min-w-0">
+              <p class="font-semibold text-sm truncate">
+                Cap. <%= chapter.display_number %> · <%= chapter.title %>
+              </p>
+              <p class="text-manga-muted text-xs mt-0.5">
+                <%= chapter.published_at.strftime("%d/%m/%Y") if chapter.published_at %>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-manga-muted text-xs hidden sm:block"><%= chapter.pages.count %> págs.</span>
+            <svg class="w-4 h-4 text-manga-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+</div>

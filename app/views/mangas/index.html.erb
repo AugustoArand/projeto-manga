@@ -1,0 +1,113 @@
+<% content_for :title, "Catálogo de Mangás" %>
+<% content_for :description, "Explore nossa coleção de mangás. Filtre por gênero e encontre seu próximo favorito." %>
+
+<%# Hero Section — fora do frame, nunca recarga %>
+<section class="relative overflow-hidden py-16 sm:py-20 px-4">
+  <div class="hero-glow"></div>
+  <div class="absolute top-0 right-0 w-96 h-96 bg-manga-neon/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-64 h-64 bg-manga-cyan/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto relative">
+    <div class="text-center animate-fade-in-up">
+      <span class="genre-chip mb-4 inline-block">✦ Nova Coleção 2026</span>
+      <h1 class="font-manga-display text-5xl sm:text-7xl lg:text-8xl tracking-widest mb-4">
+        <span class="gradient-text">MANGAVERSE</span>
+      </h1>
+      <p class="text-manga-muted text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+        Explore nosso acervo de mangás, e indique algum mangá que gostaria de ver.
+      </p>
+    </div>
+
+    <div class="flex justify-center gap-8 sm:gap-16 mt-8 animate-fade-in-up" style="animation-delay: 0.2s">
+      <div class="text-center">
+        <p class="font-manga-display text-3xl sm:text-4xl neon-text"><%= Manga.count %>+</p>
+        <p class="text-manga-muted text-xs uppercase tracking-widest">Títulos</p>
+      </div>
+      <div class="text-center">
+        <p class="font-manga-display text-3xl sm:text-4xl cyan-text"><%= Chapter.count %>+</p>
+        <p class="text-manga-muted text-xs uppercase tracking-widest">Capítulos</p>
+      </div>
+      <div class="text-center">
+        <p class="font-manga-display text-3xl sm:text-4xl text-manga-gold"><%= Manga::GENRES.size %></p>
+        <p class="text-manga-muted text-xs uppercase tracking-widest">Gêneros</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# Turbo Frame: contém filtros + grid juntos (padrão canônico) %>
+<%= turbo_frame_tag "manga_grid" do %>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+
+    <%# Filtros de gênero — dentro do frame para navegar corretamente %>
+    <div class="flex items-center gap-2 flex-wrap mb-8" id="genres">
+      <%= link_to "Todos", mangas_path,
+            class: "genre-chip #{params[:genre].blank? ? 'active' : ''}" %>
+      <% Manga::GENRES.each do |genre| %>
+        <%= link_to genre, mangas_path(genre: genre),
+              class: "genre-chip #{params[:genre] == genre ? 'active' : ''}" %>
+      <% end %>
+    </div>
+
+    <% if @mangas.any? %>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-manga-muted text-sm font-semibold uppercase tracking-wider">
+          <% if params[:genre].present? %>
+            <span class="neon-text"><%= params[:genre] %></span>
+          <% elsif params[:query].present? %>
+            Resultados para "<span class="neon-text"><%= params[:query] %></span>"
+          <% else %>
+            Todos os Mangás
+          <% end %>
+          · <span class="text-manga-text"><%= @mangas.count %> títulos</span>
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 stagger-children">
+        <% @mangas.each do |manga| %>
+          <%# target="_top" garante navegação full-page ao abrir um mangá %>
+          <%= link_to manga_path(manga), class: "manga-card animate-fade-in-up group block", data: { turbo_frame: "_top" } do %>
+            <div class="relative overflow-hidden aspect-[2/3] bg-manga-card">
+              <img src="<%= manga.cover_url %>"
+                   alt="<%= manga.title %>"
+                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                   loading="lazy"
+                   onerror="this.src='https://placehold.co/400x600/1E1E24/E040FB?text=<%= ERB::Util.url_encode(manga.title) %>&font=playfair-display'">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+              <div class="absolute top-2 left-2">
+                <span class="status-badge <%= manga.status == 'Em andamento' ? 'ongoing' : manga.status == 'Completo' ? 'completed' : 'hiatus' %>">
+                  <%= manga.status == 'Em andamento' ? '● Em andamento' : manga.status == 'Completo' ? '✓ Completo' : '⏸ Hiatus' %>
+                </span>
+              </div>
+              <div class="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded px-1.5 py-0.5">
+                <span class="rating-star">★</span>
+                <span class="text-white text-xs font-bold"><%= manga.rating %></span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 p-3">
+                <h3 class="text-white font-bold text-sm leading-tight line-clamp-2 group-hover:text-manga-neon transition-colors">
+                  <%= manga.title %>
+                </h3>
+                <p class="text-white/60 text-xs mt-0.5 truncate"><%= manga.author %></p>
+              </div>
+            </div>
+            <div class="p-3">
+              <span class="genre-chip text-xs py-0.5"><%= manga.genre %></span>
+              <p class="text-manga-muted text-xs mt-2">
+                <%= manga.chapters.count %> cap<%= manga.chapters.count == 1 ? '.' : 's.' %>
+              </p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+    <% else %>
+      <div class="text-center py-24">
+        <div class="text-6xl mb-4">📚</div>
+        <h3 class="text-manga-text font-bold text-xl mb-2">Nenhum mangá encontrado</h3>
+        <p class="text-manga-muted mb-6">Tente outro gênero ou busca.</p>
+        <%= link_to "Ver todos", mangas_path, class: "btn-primary" %>
+      </div>
+    <% end %>
+
+  </div>
+<% end %>

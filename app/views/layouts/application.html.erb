@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+    <title><%= content_for?(:title) ? yield(:title) + " | MangaVerse" : "MangaVerse — Leia Mangás Online" %></title>
+    <meta name="description" content="<%= content_for?(:description) ? yield(:description) : 'Descubra e leia seus mangás favoritos no MangaVerse. Coleção atualizada de Ação, Aventura, Romance e muito mais.' %>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="min-h-screen flex flex-col" data-controller="body">
+
+    <%# ─── NAVBAR ─── %>
+    <nav class="glassmorphism sticky top-0 z-50 border-b border-manga-border" data-controller="navbar">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+
+          <%# Logo %>
+          <%= link_to root_path, class: "flex items-center gap-2 group" do %>
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-manga-neon to-manga-cyan flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:shadow-[0_0_20px_rgba(224,64,251,0.5)] transition-all">
+              M
+            </div>
+            <span class="font-manga-display text-2xl tracking-wider gradient-text hidden sm:block">MangaVerse</span>
+          <% end %>
+
+          <%# Desktop Nav %>
+          <div class="hidden md:flex items-center gap-6">
+            <%= link_to "Catálogo", mangas_path, class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
+            <%= link_to "Gêneros", "#genres", class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
+          </div>
+
+          <%# Search & Mobile Button %>
+          <div class="flex items-center gap-3">
+            <%# Search (desktop) %>
+            <div class="hidden sm:block">
+              <%= form_with url: mangas_path, method: :get, class: "relative" do |f| %>
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-manga-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <%= f.text_field :query, placeholder: "Buscar mangá...", class: "search-input pl-10 pr-4 w-52 h-9 text-sm", value: params[:query] %>
+              <% end %>
+            </div>
+
+            <%# Mobile hamburger %>
+            <button class="md:hidden p-2 rounded-lg text-manga-muted hover:text-manga-text hover:bg-manga-card transition-all"
+                    data-action="click->navbar#toggle"
+                    aria-label="Menu">
+              <svg class="w-6 h-6" data-navbar-target="menuIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+              <svg class="w-6 h-6 hidden" data-navbar-target="closeIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <%# Mobile Menu %>
+      <div class="hidden md:hidden border-t border-manga-border bg-manga-surface px-4 pb-4 pt-3 space-y-3"
+           data-navbar-target="mobileMenu">
+        <%= form_with url: mangas_path, method: :get do |f| %>
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-manga-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <%= f.text_field :query, placeholder: "Buscar mangá...", class: "search-input pl-10 pr-4 h-10", value: params[:query] %>
+          </div>
+        <% end %>
+        <div class="flex flex-col gap-2">
+          <%= link_to "Catálogo", mangas_path, class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase py-2" %>
+        </div>
+      </div>
+    </nav>
+
+    <%# Flash Messages %>
+    <% flash.each do |type, msg| %>
+      <div class="max-w-7xl mx-auto px-4 mt-4">
+        <div class="p-3 rounded-lg text-sm font-semibold <%= type == 'notice' ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-red-900/30 text-red-400 border border-red-800' %>">
+          <%= msg %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Main Content %>
+    <main class="flex-1">
+      <%= yield %>
+    </main>
+
+    <%# Footer %>
+    <footer class="border-t border-manga-border mt-16 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded bg-gradient-to-br from-manga-neon to-manga-cyan flex items-center justify-center text-white font-bold text-xs">M</div>
+            <span class="font-manga-display text-xl tracking-wider gradient-text">MangaVerse</span>
+          </div>
+          <p class="text-manga-muted text-sm">© 2026 MangaVerse · Feito com <span class="neon-text">♥</span> e Ruby on Rails</p>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>
