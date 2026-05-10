@@ -68,7 +68,7 @@
           <%# target="_top" garante navegação full-page ao abrir um mangá %>
           <%= link_to manga_path(manga), class: "manga-card animate-fade-in-up group block", data: { turbo_frame: "_top" } do %>
             <div class="relative overflow-hidden aspect-[2/3] bg-manga-card">
-              <img src="<%= manga.cover_url %>"
+              <img src="<%= manga.cover.attached? ? url_for(manga.cover) : '' %>"
                    alt="<%= manga.title %>"
                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                    loading="lazy"

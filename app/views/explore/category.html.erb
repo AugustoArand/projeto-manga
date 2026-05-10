@@ -1,0 +1,38 @@
+<% content_for :title, @tag_name %>
+<% content_for :description, "Explore mangás de #{@tag_name} no MangaVerse." %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <%# Breadcrumb %>
+  <nav class="flex items-center gap-2 text-sm text-manga-muted mb-6">
+    <%= link_to "Explorar", explore_path, class: "hover:text-manga-neon transition-colors" %>
+    <span class="text-manga-border">/</span>
+    <span class="text-manga-text font-medium"><%= @tag_name %></span>
+  </nav>
+
+  <div class="section-header mb-8">
+    <div>
+      <h1 class="font-manga-display text-4xl sm:text-5xl tracking-wider">
+        <span class="gradient-text"><%= @tag_name.upcase %></span>
+      </h1>
+      <p class="section-header__subtitle mt-1"><%= @mangas.size %> títulos encontrados</p>
+    </div>
+    <%= link_to "← Voltar", explore_path, class: "btn-secondary text-sm" %>
+  </div>
+
+  <% if @mangas.any? %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 stagger-children">
+      <% @mangas.each do |manga| %>
+        <%= render "explore/manga_card_api", manga: manga %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-24">
+      <div class="text-6xl mb-4">🔍</div>
+      <h3 class="text-manga-text font-bold text-xl mb-2">Nenhum mangá encontrado</h3>
+      <p class="text-manga-muted mb-6">Tente outra categoria.</p>
+      <%= link_to "Explorar", explore_path, class: "btn-primary" %>
+    </div>
+  <% end %>
+
+</div>

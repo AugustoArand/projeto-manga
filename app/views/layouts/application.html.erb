@@ -30,8 +30,10 @@
 
           <%# Desktop Nav %>
           <div class="hidden md:flex items-center gap-6">
+            <%= link_to "Explorar", explore_path, class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
             <%= link_to "Catálogo", mangas_path, class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
-            <%= link_to "Gêneros", "#genres", class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
+            <%= link_to "Categorias", "#categorias", class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
+            <%= link_to "Histórico", "#historico", class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase" %>
           </div>
 
           <%# Search & Mobile Button %>
@@ -73,7 +75,10 @@
           </div>
         <% end %>
         <div class="flex flex-col gap-2">
+          <%= link_to "Explorar", explore_path, class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase py-2" %>
           <%= link_to "Catálogo", mangas_path, class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase py-2" %>
+          <%= link_to "Categorias", "#categorias", class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase py-2" %>
+          <%= link_to "Histórico", "#historico", class: "text-manga-muted hover:text-manga-text transition-colors text-sm font-semibold tracking-wide uppercase py-2" %>
         </div>
       </div>
     </nav>

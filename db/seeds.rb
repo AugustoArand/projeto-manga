@@ -1,6 +1,8 @@
 # This file should ensure the existence of records required to run the application in every environment (production,
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 
+require "open-uri"
+
 puts "🌱 Seeding manga database..."
 
 Manga.destroy_all
@@ -80,18 +82,32 @@ mangas_data = [
   }
 ]
 
-# Páginas de exemplo (URLs de imagens de mangá públicas / placeholder)
+# Páginas de exemplo (placeholder público)
 sample_page_urls = [
-  "https://placehold.co/800x1200/1a1a2e/E040FB?text=Página+1&font=playfair-display",
-  "https://placehold.co/800x1200/1a1a2e/00E5FF?text=Página+2&font=playfair-display",
-  "https://placehold.co/800x1200/1a1a2e/E040FB?text=Página+3&font=playfair-display",
-  "https://placehold.co/800x1200/1a1a2e/00E5FF?text=Página+4&font=playfair-display",
-  "https://placehold.co/800x1200/1a1a2e/E040FB?text=Página+5&font=playfair-display"
+  "https://placehold.co/800x1200/1a1a2e/E040FB?text=Pagina+1&font=playfair-display",
+  "https://placehold.co/800x1200/1a1a2e/00E5FF?text=Pagina+2&font=playfair-display",
+  "https://placehold.co/800x1200/1a1a2e/E040FB?text=Pagina+3&font=playfair-display",
+  "https://placehold.co/800x1200/1a1a2e/00E5FF?text=Pagina+4&font=playfair-display",
+  "https://placehold.co/800x1200/1a1a2e/E040FB?text=Pagina+5&font=playfair-display"
 ]
 
 mangas_data.each do |manga_data|
+  cover_url = manga_data.delete(:cover_url)
   manga = Manga.create!(manga_data)
-  puts "  ✓ Criado: #{manga.title}"
+
+  # Anexar capa via Active Storage (baixa da URL remota)
+  if cover_url.present?
+    begin
+      filename = File.basename(URI.parse(cover_url).path)
+      downloaded = URI.open(cover_url, "User-Agent" => "Mozilla/5.0 MangaApp/1.0")
+      manga.cover.attach(io: downloaded, filename: filename)
+      puts "  ✓ Criado: #{manga.title} (capa anexada)"
+    rescue => e
+      puts "  ✓ Criado: #{manga.title} (capa não disponível: #{e.message})"
+    end
+  else
+    puts "  ✓ Criado: #{manga.title}"
+  end
 
   # Criar 3 capítulos por mangá
   3.times do |chapter_num|
@@ -101,12 +117,15 @@ mangas_data.each do |manga_data|
       published_at: (30 - chapter_num * 7).days.ago
     )
 
-    # 5 páginas por capítulo
+    # 5 páginas por capítulo — anexar imagens via Active Storage
     sample_page_urls.each_with_index do |url, page_num|
-      chapter.pages.create!(
-        number: page_num + 1,
-        image_url: url.gsub("Página+#{page_num + 1 - 1}", "Página+#{page_num + 1}")
-      )
+      page = chapter.pages.create!(number: page_num + 1)
+      begin
+        downloaded = URI.open(url, "User-Agent" => "Mozilla/5.0 MangaApp/1.0")
+        page.image.attach(io: downloaded, filename: "page_#{page_num + 1}.png", content_type: "image/png")
+      rescue => e
+        # Página criada sem imagem; o leitor usará o fallback de placeholder
+      end
     end
   end
 end

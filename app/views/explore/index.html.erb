@@ -1,0 +1,286 @@
+<% content_for :title, "Explorar — Descubra Novos Mangás" %>
+<% content_for :description, "Explore os mangás mais populares, últimos lançamentos e recomendações personalizadas no MangaVerse." %>
+
+<%# ═══════════════════════════════════════════ %>
+<%# HERO SLIDER                                 %>
+<%# ═══════════════════════════════════════════ %>
+<% if @hero_mangas.any? %>
+<section class="hero-slider" data-controller="hero-slider" data-hero-slider-interval-value="6000" id="hero-slider">
+  <div class="hero-slider__track" data-hero-slider-target="track">
+    <% @hero_mangas.each_with_index do |manga, idx| %>
+      <div class="hero-slide <%= 'active' if idx == 0 %>" data-hero-slider-target="slide">
+        <%# Background blurred cover %>
+        <div class="hero-slide__bg" style="background-image: url('<%= manga[:cover_url] || '' %>');"></div>
+        <div class="hero-slide__overlay"></div>
+
+        <div class="hero-slide__content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="hero-slide__info">
+            <div class="hero-slide__tags">
+              <% manga[:tags]&.first(3)&.each do |tag| %>
+                <span class="genre-chip"><%= tag %></span>
+              <% end %>
+            </div>
+            <h2 class="hero-slide__title font-manga-display">
+              <%= manga[:title] %>
+            </h2>
+            <p class="hero-slide__desc">
+              <%= truncate(manga[:description].to_s, length: 180) %>
+            </p>
+            <div class="hero-slide__meta">
+              <% if manga[:author] %>
+                <span class="hero-slide__author">✍ <%= manga[:author] %></span>
+              <% end %>
+              <% if manga[:year] %>
+                <span class="hero-slide__year">📅 <%= manga[:year] %></span>
+              <% end %>
+              <% if manga[:status] %>
+                <span class="status-badge <%= manga[:status] == 'ongoing' ? 'ongoing' : manga[:status] == 'completed' ? 'completed' : 'hiatus' %>">
+                  <%= manga[:status]&.capitalize %>
+                </span>
+              <% end %>
+            </div>
+            <a href="https://mangadex.org/title/<%= manga[:id] %>" target="_blank" rel="noopener" class="btn-primary mt-4">
+              📖 Ver no MangaDex
+            </a>
+          </div>
+          <div class="hero-slide__cover">
+            <img src="<%= manga[:cover_url] || '' %>"
+                 alt="<%= manga[:title] %>"
+                 loading="<%= idx == 0 ? 'eager' : 'lazy' %>"
+                 onerror="this.src='https://placehold.co/400x600/1E1E24/E040FB?text=Cover&font=playfair-display'">
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Dots navigation %>
+  <div class="hero-slider__dots" data-hero-slider-target="dots">
+    <% @hero_mangas.each_with_index do |_, idx| %>
+      <button class="hero-dot <%= 'active' if idx == 0 %>"
+              data-action="click->hero-slider#goTo"
+              data-index="<%= idx %>"
+              aria-label="Slide <%= idx + 1 %>">
+      </button>
+    <% end %>
+  </div>
+
+  <%# Arrow navigation %>
+  <button class="hero-slider__arrow hero-slider__arrow--prev" data-action="click->hero-slider#prev" aria-label="Anterior">
+    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+  </button>
+  <button class="hero-slider__arrow hero-slider__arrow--next" data-action="click->hero-slider#next" aria-label="Próximo">
+    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+  </button>
+</section>
+<% end %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+
+  <%# ═══════════════════════════════════════════ %>
+  <%# ÚLTIMOS LANÇAMENTOS                         %>
+  <%# ═══════════════════════════════════════════ %>
+  <% if @latest.any? %>
+  <section class="explore-section" id="ultimos-lancamentos">
+    <div class="section-header">
+      <div>
+        <h2 class="section-header__title font-manga-display">
+          <span class="section-header__icon">🔥</span>
+          <span class="gradient-text">ÚLTIMOS LANÇAMENTOS</span>
+        </h2>
+        <p class="section-header__subtitle">Capítulos recém-publicados</p>
+      </div>
+    </div>
+
+    <div class="scroll-row-wrapper" data-controller="scroll-row">
+      <button class="scroll-row__btn scroll-row__btn--prev" data-action="click->scroll-row#scrollLeft" data-scroll-row-target="prevBtn" aria-label="Scroll esquerda">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="scroll-row" data-scroll-row-target="container">
+        <% @latest.each do |chapter| %>
+          <%= render "explore/chapter_card", chapter: chapter %>
+        <% end %>
+      </div>
+      <button class="scroll-row__btn scroll-row__btn--next" data-action="click->scroll-row#scrollRight" data-scroll-row-target="nextBtn" aria-label="Scroll direita">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+  <% end %>
+
+  <%# ═══════════════════════════════════════════ %>
+  <%# POPULARES                                    %>
+  <%# ═══════════════════════════════════════════ %>
+  <% if @popular.any? %>
+  <section class="explore-section" id="populares">
+    <div class="section-header">
+      <div>
+        <h2 class="section-header__title font-manga-display">
+          <span class="section-header__icon">⭐</span>
+          <span class="gradient-text">POPULARES</span>
+        </h2>
+        <p class="section-header__subtitle">Os mangás mais seguidos da comunidade</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 stagger-children">
+      <% @popular.each do |manga| %>
+        <%= render "explore/manga_card_api", manga: manga %>
+      <% end %>
+    </div>
+  </section>
+  <% end %>
+
+  <%# ═══════════════════════════════════════════ %>
+  <%# RECOMENDAÇÕES                                %>
+  <%# ═══════════════════════════════════════════ %>
+  <% if @recommendations.any? && @history.any? %>
+  <section class="explore-section" id="recomendacoes">
+    <div class="section-header">
+      <div>
+        <h2 class="section-header__title font-manga-display">
+          <span class="section-header__icon">💎</span>
+          <span class="gradient-text">RECOMENDAÇÕES</span>
+        </h2>
+        <p class="section-header__subtitle">Baseado no que você leu</p>
+      </div>
+    </div>
+
+    <div class="scroll-row-wrapper" data-controller="scroll-row">
+      <button class="scroll-row__btn scroll-row__btn--prev" data-action="click->scroll-row#scrollLeft" data-scroll-row-target="prevBtn" aria-label="Scroll esquerda">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="scroll-row" data-scroll-row-target="container">
+        <% @recommendations.each do |manga| %>
+          <%= render "explore/manga_card_api", manga: manga, compact: true %>
+        <% end %>
+      </div>
+      <button class="scroll-row__btn scroll-row__btn--next" data-action="click->scroll-row#scrollRight" data-scroll-row-target="nextBtn" aria-label="Scroll direita">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+  <% end %>
+
+  <%# ═══════════════════════════════════════════ %>
+  <%# CATEGORIAS                                   %>
+  <%# ═══════════════════════════════════════════ %>
+  <% if @categories.any? %>
+  <section class="explore-section" id="categorias">
+    <div class="section-header">
+      <div>
+        <h2 class="section-header__title font-manga-display">
+          <span class="section-header__icon">📂</span>
+          <span class="gradient-text">CATEGORIAS</span>
+        </h2>
+        <p class="section-header__subtitle">Explore por gênero</p>
+      </div>
+    </div>
+
+    <div class="category-grid">
+      <% category_icons = {
+        "Action" => "⚔️", "Adventure" => "🗺️", "Comedy" => "😂", "Drama" => "🎭",
+        "Fantasy" => "🧙", "Horror" => "👻", "Mystery" => "🔍", "Romance" => "💕",
+        "Sci-Fi" => "🚀", "Slice of Life" => "🌸", "Sports" => "⚽", "Thriller" => "😰",
+        "Tragedy" => "💔", "Mecha" => "🤖", "Supernatural" => "👁️", "Psychological" => "🧠",
+        "Historical" => "📜", "Isekai" => "🌀", "Magical Girls" => "✨", "Music" => "🎵",
+        "Philosophical" => "💭", "Wuxia" => "🥋", "Crime" => "🔫", "Survival" => "🏕️",
+        "Medical" => "🏥", "Boys' Love" => "💙", "Girls' Love" => "💜"
+      } %>
+      <% @categories.first(18).each do |cat| %>
+        <%= render "explore/category_card",
+                   category: cat,
+                   icon: category_icons[cat[:name]] || "📚" %>
+      <% end %>
+    </div>
+  </section>
+  <% end %>
+
+  <%# ═══════════════════════════════════════════ %>
+  <%# HISTÓRICO                                    %>
+  <%# ═══════════════════════════════════════════ %>
+  <% if @history.any? %>
+  <section class="explore-section" id="historico">
+    <div class="section-header">
+      <div>
+        <h2 class="section-header__title font-manga-display">
+          <span class="section-header__icon">📖</span>
+          <span class="gradient-text">HISTÓRICO</span>
+        </h2>
+        <p class="section-header__subtitle">Continue de onde parou</p>
+      </div>
+    </div>
+
+    <div class="scroll-row-wrapper" data-controller="scroll-row">
+      <button class="scroll-row__btn scroll-row__btn--prev" data-action="click->scroll-row#scrollLeft" data-scroll-row-target="prevBtn" aria-label="Scroll esquerda">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="scroll-row" data-scroll-row-target="container">
+        <% @history.each do |entry| %>
+          <div class="history-card">
+            <div class="history-card__cover">
+              <% if entry.manga.present? && entry.manga.cover.attached? %>
+                <img src="<%= url_for(entry.manga.cover) %>" alt="<%= entry.title %>" loading="lazy"
+                     onerror="this.src='https://placehold.co/200x300/1E1E24/E040FB?text=Cover&font=playfair-display'">
+              <% elsif entry.cover_url.present? %>
+                <img src="<%= entry.cover_url %>" alt="<%= entry.title %>" loading="lazy"
+                     onerror="this.src='https://placehold.co/200x300/1E1E24/E040FB?text=Cover&font=playfair-display'">
+              <% else %>
+                <div class="history-card__placeholder">📚</div>
+              <% end %>
+            </div>
+            <div class="history-card__info">
+              <h4 class="history-card__title"><%= entry.title %></h4>
+              <p class="history-card__genre"><%= entry.genre %></p>
+              <p class="history-card__time"><%= time_ago_in_words(entry.updated_at) %> atrás</p>
+            </div>
+            <% if entry.manga.present? %>
+              <%= link_to manga_path(entry.manga), class: "history-card__link" do %>
+                <span>Continuar</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              <% end %>
+            <% elsif entry.mangadex_id.present? %>
+              <a href="https://mangadex.org/title/<%= entry.mangadex_id %>" target="_blank" rel="noopener" class="history-card__link">
+                <span>MangaDex</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <button class="scroll-row__btn scroll-row__btn--next" data-action="click->scroll-row#scrollRight" data-scroll-row-target="nextBtn" aria-label="Scroll direita">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+  <% end %>
+
+  <%# ═══════════════════════════════════════════ %>
+  <%# CATÁLOGO LOCAL (CTA)                         %>
+  <%# ═══════════════════════════════════════════ %>
+  <section class="explore-section">
+    <div class="local-cta">
+      <div class="local-cta__glow"></div>
+      <div class="local-cta__content">
+        <h3 class="font-manga-display text-3xl sm:text-4xl tracking-wider gradient-text mb-2">CATÁLOGO LOCAL</h3>
+        <p class="text-manga-muted text-sm sm:text-base mb-6 max-w-lg">
+          Explore nossa coleção interna de mangás com leitura completa de capítulos e páginas.
+        </p>
+        <div class="flex gap-4 items-center flex-wrap justify-center">
+          <%= link_to "📚 Ver Catálogo", mangas_path, class: "btn-primary" %>
+          <div class="flex gap-6">
+            <div class="text-center">
+              <p class="font-manga-display text-2xl neon-text"><%= Manga.count %></p>
+              <p class="text-manga-muted text-xs uppercase tracking-wider">Títulos</p>
+            </div>
+            <div class="text-center">
+              <p class="font-manga-display text-2xl cyan-text"><%= Chapter.count %></p>
+              <p class="text-manga-muted text-xs uppercase tracking-wider">Capítulos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

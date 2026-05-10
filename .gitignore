@@ -28,11 +28,25 @@
 !/tmp/storage/
 !/tmp/storage/.keep
 
+# SQLite databases (legado — projeto usa PostgreSQL)
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+
 /public/assets
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
-
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# Google Cloud Storage keyfile
+config/gcs_keyfile.json
+
+# Kamal — secrets de deploy (nunca commitar)
+.kamal/secrets
+
+# Ruby LSP — cache gerado pelo editor (regenerado automaticamente)
+.ruby-lsp/

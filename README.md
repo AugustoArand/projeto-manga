@@ -1,97 +1,191 @@
-# 📚 MangaVerse
+# MangaVerse
 
-> Sua plataforma de leitura de mangás online — moderna, rápida e elegante.
-
-MangaVerse é um leitor de mangás desenvolvido com **Ruby on Rails 8**, **Hotwire** e **Tailwind CSS**. O sistema oferece uma experiência de leitura fluida e imersiva, com um design dark fashion responsivo para celulares e desktops.
+Plataforma de leitura de mangás com backend Rails, integração com a API do MangaDex e app mobile em React Native (Expo).
 
 ---
 
-## 🖼️ Screenshots
+## Arquitetura
 
-| Catálogo | Detalhe do Mangá |
-|:---:|:---:|
-| ![Catálogo](docs/screenshots/home.png) | ![Detalhe](docs/screenshots/detail.png) |
+```
+projeto-manga/          → API Rails (backend + web)
+manga-mobile/           → App mobile Expo (React Native)
+```
 
-| Leitor de Capítulos | Mobile (375px) |
-|:---:|:---:|
-| ![Leitor](docs/screenshots/reader.png) | ![Mobile](docs/screenshots/mobile.png) |
+O Rails serve duas interfaces a partir do mesmo código:
 
----
-
-## ✨ Funcionalidades
-
-- **Catálogo de mangás** com grid visual de capas, ratings e status (Em andamento / Completo / Hiatus)
-- **Filtro por gênero** em tempo real via Turbo Frame (sem recarregar a página)
-- **Busca** por título ou autor
-- **Página de detalhe** com capa, sinopse, avaliação por estrelas e lista de capítulos
-- **Leitor de capítulos** com barra de progresso dinâmica e navegação entre capítulos
-- **Menu mobile** com hamburger animado
-- **Design responsivo** — otimizado para celular (375px) até telas wide
+- **Web** — páginas HTML com Hotwire/Turbo para o catálogo e leitor
+- **API JSON** (`/api/v1`) — endpoints consumidos pelo app mobile
 
 ---
 
-## 🛠 Tecnologias
+## Funcionalidades
+
+**Web**
+- Catálogo de mangás locais com filtro por gênero e busca por título/autor
+- Página de detalhe com capa, sinopse, avaliação e lista de capítulos
+- Leitor de capítulos com navegação entre páginas e capítulos
+
+**Explore (MangaDex)**
+- Mangás em alta, últimos lançamentos em PT-BR e recomendações personalizadas
+- Navegação por 18+ gêneros/categorias
+- Histórico de leitura que alimenta o sistema de recomendação
+
+**App mobile**
+- Tela inicial com hero de destaque, card "Continue lendo" e "Novo hoje"
+- Grade de categorias com identidade visual por gênero
+- Busca no catálogo local
+- Histórico de leitura
+
+---
+
+## Tecnologias
 
 | Camada | Tecnologia |
-|--------|-----------|
-| Backend | Ruby on Rails 8.1 · SQLite |
-| Frontend | Hotwire (Turbo Frames + Stimulus) |
-| CSS | Tailwind CSS v4 com tema customizado |
-| Fontes | Bebas Neue (títulos) · Nunito (corpo) |
+|---|---|
+| Backend | Ruby on Rails 8.1 |
+| Banco de dados | PostgreSQL |
+| API externa | MangaDex API (mangadex.org) |
+| Frontend web | Hotwire · Turbo Frames · Stimulus |
+| CSS | Tailwind CSS v4 |
+| Armazenamento de arquivos | Active Storage (Google Cloud Storage em produção) |
+| App mobile | Expo SDK 55 · React Native 0.85 · React 19 |
+| Navegação mobile | Expo Router 4 (file-based) |
+| Estado/cache mobile | TanStack Query v5 |
+| HTTP mobile | Axios |
 
 ---
 
-## 🚀 Como executar
+## Pré-requisitos
 
-**Pré-requisitos:** Ruby 3.2+, Bundler
+**Backend**
+- Ruby 3.2+
+- PostgreSQL 12+
+- Bundler
+
+**Mobile**
+- Node.js 18+
+- Expo CLI (`npm install -g expo-cli`)
+- Expo Go no dispositivo ou emulador Android/iOS
+
+---
+
+## Instalação e execução
+
+### Backend Rails
 
 ```bash
-# 1. Instalar dependências
+cd projeto-manga
+
+# Instalar gems
 bundle install
 
-# 2. Criar e migrar o banco de dados
-bin/rails db:create db:migrate
+# Criar banco PostgreSQL e carregar schema
+rails db:create db:schema:load
 
-# 3. Popular com dados de exemplo
-bin/rails db:seed
+# (Opcional) Popular com dados de exemplo
+rails db:seed
 
-# 4. Iniciar o servidor
-bin/rails server
+# Iniciar servidor
+rails server
 ```
 
-Acesse **http://localhost:3000** no seu navegador.
+Web disponível em `http://localhost:3000`
+API disponível em `http://localhost:3000/api/v1`
+
+### App mobile
+
+```bash
+cd manga-mobile
+
+npm install --legacy-peer-deps
+
+# Iniciar Metro Bundler
+npx expo start
+```
+
+Escaneie o QR code com o Expo Go ou pressione `a` (Android) / `i` (iOS).
+
+> **Dispositivo físico Android:** altere `API_BASE` em `services/api.ts` para o IP da sua máquina (ex: `http://192.168.1.x:3000/api/v1`).
 
 ---
 
-## 🎨 Design
+## Endpoints da API
 
-O tema foi desenvolvido com uma paleta **dark fashion**:
-- Fundo quase preto (`#0D0D0F`) para máximo conforto na leitura
-- Acentos em **lilás neon** (`#E040FB`) e **ciano** (`#00E5FF`)
-- Glassmorphism na navbar e leitor
-- Animações suaves em hover, fade-in e progresso de leitura
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/v1/explore` | Popular, lançamentos, categorias, histórico, recomendações |
+| GET | `/api/v1/explore/category` | Mangás por gênero (`?tag_id=&name=`) |
+| GET | `/api/v1/mangas` | Catálogo local (`?genre=&query=`) |
+| GET | `/api/v1/mangas/:id` | Detalhe + capítulos |
+| GET | `/api/v1/mangas/:manga_id/chapters/:id` | Páginas do capítulo |
+| GET | `/api/v1/reading_histories` | Histórico de leitura |
+| POST | `/api/v1/reading_histories` | Registrar leitura |
 
----
-
-## 📁 Estrutura principal
-
-```
-app/
-├── controllers/
-│   ├── mangas_controller.rb      # Catálogo e detalhe
-│   └── chapters_controller.rb   # Leitor de capítulos
-├── models/
-│   ├── manga.rb                  # Título, autor, gênero, status
-│   ├── chapter.rb                # Capítulos com navegação
-│   └── page.rb                  # Páginas individuais
-├── views/
-│   ├── mangas/                   # Index e show
-│   └── chapters/                 # Leitor
-└── javascript/controllers/
-    ├── navbar_controller.js      # Menu mobile
-    └── reader_controller.js      # Progresso de leitura
-```
+Todos os endpoints retornam JSON. CORS habilitado para origens externas.
 
 ---
 
-Feito com ♥ e Ruby on Rails.
+## Estrutura do projeto
+
+```
+projeto-manga/
+├── app/
+│   ├── controllers/
+│   │   ├── api/v1/                   # Controllers da API mobile
+│   │   │   ├── base_controller.rb
+│   │   │   ├── explore_controller.rb
+│   │   │   ├── mangas_controller.rb
+│   │   │   ├── chapters_controller.rb
+│   │   │   └── reading_histories_controller.rb
+│   │   ├── explore_controller.rb     # Homepage web
+│   │   ├── mangas_controller.rb      # Catálogo web
+│   │   └── chapters_controller.rb   # Leitor web
+│   ├── models/
+│   │   ├── manga.rb
+│   │   ├── chapter.rb
+│   │   ├── page.rb
+│   │   └── reading_history.rb
+│   ├── services/
+│   │   └── mangadex_service.rb       # Integração MangaDex API
+│   └── views/
+│       ├── api/v1/                   # Templates JBuilder (JSON)
+│       ├── mangas/
+│       ├── chapters/
+│       └── explore/
+├── config/
+│   ├── routes.rb
+│   ├── database.yml                  # PostgreSQL
+│   └── initializers/cors.rb
+└── db/
+    └── schema.rb
+
+manga-mobile/
+├── app/
+│   ├── _layout.tsx                   # Root layout + React Query Provider
+│   ├── (tabs)/
+│   │   ├── index.tsx                 # Home (hero + lançamentos + categorias)
+│   │   ├── categories.tsx            # Grade de gêneros
+│   │   ├── search.tsx                # Busca no catálogo
+│   │   └── history.tsx              # Histórico de leitura
+│   ├── manga/[id].tsx               # Detalhe do mangá
+│   ├── chapter/[id].tsx             # Leitor de capítulos
+│   └── category/[id].tsx            # Mangás por categoria
+├── services/
+│   └── api.ts                        # Cliente Axios → Rails API
+└── constants/
+    └── genres.ts                     # Mapeamento gênero → emoji/cores
+```
+
+---
+
+## Variáveis de ambiente
+
+| Variável | Descrição | Padrão |
+|---|---|---|
+| `DB_USERNAME` | Usuário PostgreSQL | `usuario` (peer auth) |
+| `DB_PASSWORD` | Senha PostgreSQL | vazio |
+| `DATABASE_URL` | URL completa (produção) | — |
+
+---
+
+Feito com Ruby on Rails e React Native.

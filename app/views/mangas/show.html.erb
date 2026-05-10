@@ -17,7 +17,7 @@
     <div class="flex-shrink-0 mx-auto md:mx-0">
       <div class="w-48 sm:w-56 md:w-64 relative group">
         <div class="absolute inset-0 bg-gradient-to-br from-manga-neon/20 to-manga-cyan/20 rounded-xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100"></div>
-        <img src="<%= @manga.cover_url %>"
+        <img src="<%= @manga.cover.attached? ? url_for(@manga.cover) : '' %>"
              alt="<%= @manga.title %>"
              class="w-full aspect-[2/3] object-cover rounded-xl shadow-2xl relative z-10 border border-manga-border"
              onerror="this.src='https://placehold.co/400x600/1E1E24/E040FB?text=<%= ERB::Util.url_encode(@manga.title) %>&font=playfair-display'">

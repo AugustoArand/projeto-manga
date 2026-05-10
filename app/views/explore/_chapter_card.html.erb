@@ -1,0 +1,41 @@
+<%# Partial: Chapter card para Últimos Lançamentos %>
+<%# Locals: chapter (hash from MangaDex API) %>
+
+<a href="https://mangadex.org/chapter/<%= chapter[:id] %>"
+   target="_blank"
+   rel="noopener"
+   class="chapter-card group"
+   title="<%= chapter[:manga_title] %> — Cap. <%= chapter[:chapter] %>">
+  <div class="chapter-card__number">
+    <span class="font-manga-display text-lg neon-text">
+      <%= chapter[:chapter] || "?" %>
+    </span>
+  </div>
+  <div class="chapter-card__info">
+    <h4 class="chapter-card__manga-title">
+      <%= chapter[:manga_title] || "Mangá" %>
+    </h4>
+    <p class="chapter-card__chapter-title">
+      <% if chapter[:title].present? %>
+        Cap. <%= chapter[:chapter] %> · <%= truncate(chapter[:title], length: 40) %>
+      <% else %>
+        Capítulo <%= chapter[:chapter] %>
+      <% end %>
+    </p>
+    <div class="chapter-card__meta">
+      <% if chapter[:group_name] %>
+        <span class="chapter-card__group">👥 <%= truncate(chapter[:group_name], length: 20) %></span>
+      <% end %>
+      <% if chapter[:published_at] %>
+        <span class="chapter-card__date">
+          <%= time_ago_in_words(Time.parse(chapter[:published_at])) %> atrás
+        </span>
+      <% end %>
+    </div>
+  </div>
+  <div class="chapter-card__arrow">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  </div>
+</a>

@@ -1,0 +1,51 @@
+<%# Partial: Manga card para dados da API MangaDex %>
+<%# Locals: manga (hash), compact (boolean, optional) %>
+<% compact ||= false %>
+
+<a href="https://mangadex.org/title/<%= manga[:id] %>"
+   target="_blank"
+   rel="noopener"
+   class="manga-card animate-fade-in-up group block <%= 'manga-card--compact' if compact %>"
+   title="<%= manga[:title] %>">
+  <div class="relative overflow-hidden aspect-[2/3] bg-manga-card">
+    <img src="<%= manga[:cover_url] || '' %>"
+         alt="<%= manga[:title] %>"
+         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+         loading="lazy"
+         onerror="this.src='https://placehold.co/400x600/1E1E24/E040FB?text=<%= ERB::Util.url_encode(manga[:title].to_s.first(20)) %>&font=playfair-display'">
+    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+
+    <% if manga[:status] %>
+      <div class="absolute top-2 left-2">
+        <span class="status-badge <%= manga[:status] == 'ongoing' ? 'ongoing' : manga[:status] == 'completed' ? 'completed' : 'hiatus' %>">
+          <%= manga[:status] == 'ongoing' ? '● Em andamento' : manga[:status] == 'completed' ? '✓ Completo' : '⏸ Hiatus' %>
+        </span>
+      </div>
+    <% end %>
+
+    <% if manga[:year] %>
+      <div class="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded px-1.5 py-0.5">
+        <span class="text-manga-gold text-xs">📅</span>
+        <span class="text-white text-xs font-bold"><%= manga[:year] %></span>
+      </div>
+    <% end %>
+
+    <div class="absolute bottom-0 left-0 right-0 p-3">
+      <h3 class="text-white font-bold text-sm leading-tight line-clamp-2 group-hover:text-manga-neon transition-colors">
+        <%= manga[:title] %>
+      </h3>
+      <% if manga[:author] %>
+        <p class="text-white/60 text-xs mt-0.5 truncate"><%= manga[:author] %></p>
+      <% end %>
+    </div>
+  </div>
+  <% unless compact %>
+    <div class="p-3">
+      <div class="flex flex-wrap gap-1">
+        <% manga[:tags]&.first(2)&.each do |tag| %>
+          <span class="genre-chip text-xs py-0.5"><%= tag %></span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</a>

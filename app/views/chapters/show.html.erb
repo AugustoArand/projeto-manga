@@ -49,7 +49,7 @@
       <div class="reader-page"
            data-reader-target="page"
            data-page-number="<%= index + 1 %>">
-        <img src="<%= page.image_url %>"
+        <img src="<%= page.image.attached? ? url_for(page.image) : '' %>"
              alt="Página <%= page.number %>"
              class="w-full block"
              loading="<%= index < 3 ? 'eager' : 'lazy' %>">
