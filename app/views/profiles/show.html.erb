@@ -1,0 +1,154 @@
+<% content_for :title, "Minha Conta" %>
+
+<div class="max-w-2xl mx-auto px-4 py-8 sm:px-6">
+
+  <%# ── Cabeçalho ── %>
+  <div class="flex items-end justify-between mb-6">
+    <div>
+      <p class="text-manga-muted text-xs uppercase tracking-widest mb-1">perfil</p>
+      <h1 class="font-manga-display text-3xl tracking-wider text-manga-text" style="text-decoration: underline; text-underline-offset: 6px;">minha conta</h1>
+    </div>
+    <%= link_to plans_path, class: "flex flex-col items-center gap-1 text-manga-muted hover:text-manga-neon transition-colors" do %>
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="text-xs tracking-wide">ajustes</span>
+    <% end %>
+  </div>
+
+  <%# ── Card do Usuário ── %>
+  <div class="profile-card mb-8">
+    <div class="profile-card__stripe-bg"></div>
+
+    <div class="profile-card__body">
+      <%# Avatar %>
+      <div class="profile-avatar-wrap">
+        <% if @user[:vip] %>
+          <div class="profile-avatar-ring vip-ring"></div>
+        <% end %>
+        <div class="profile-avatar">
+          <%= @user[:initials] %>
+        </div>
+        <% if @user[:vip] %>
+          <div class="profile-vip-badge">
+            <svg width="10" height="10" fill="white" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v2h14v-2z"/></svg>
+            VIP
+          </div>
+        <% end %>
+      </div>
+
+      <%# Info %>
+      <div class="profile-info">
+        <p class="profile-info__handle"><%= @user[:handle] %></p>
+        <h2 class="profile-info__name"><%= @user[:name] %></h2>
+        <% if @user[:vip] %>
+          <p class="profile-info__vip-label">membro VIP · desde <%= @user[:member_since] %></p>
+        <% end %>
+
+        <div class="profile-info__badges">
+          <div class="profile-badge profile-badge--level">
+            <span class="profile-badge__label">nível</span>
+            <span class="profile-badge__value"><%= @user[:level] %></span>
+          </div>
+          <div class="profile-badge profile-badge--title">
+            <svg width="12" height="12" fill="var(--color-manga-neon)" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            <span><%= @user[:badge] %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# XP Bar %>
+    <div class="profile-xp">
+      <div class="profile-xp__labels">
+        <span>nv. <%= @user[:level] %></span>
+        <span><%= number_with_delimiter(@user[:xp_current], delimiter: ".") %> / <%= number_with_delimiter(@user[:xp_needed], delimiter: ".") %></span>
+        <span>nv. <%= @user[:next_level] %></span>
+      </div>
+      <div class="profile-xp__track">
+        <div class="profile-xp__fill" style="width: <%= (@user[:xp_current].to_f / @user[:xp_needed] * 100).round %>%;"></div>
+      </div>
+      <p class="profile-xp__label">xp</p>
+    </div>
+  </div>
+
+  <%# ── Estatísticas ── %>
+  <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-2">
+      <span style="font-size: 1.4rem;">📊</span>
+      <h3 class="font-manga-display text-xl tracking-wider text-manga-text">estatísticas</h3>
+    </div>
+    <%= link_to "histórico completo", "#historico", class: "text-manga-muted hover:text-manga-neon text-xs uppercase tracking-wider transition-colors" %>
+  </div>
+  <p class="text-manga-muted text-xs mb-5">continue avançando esses indicadores</p>
+
+  <div class="stats-grid">
+
+    <%# Favoritos %>
+    <div class="stat-card stat-card--pink">
+      <div class="stat-card__header">
+        <span class="stat-card__icon">♡</span>
+        <span class="stat-card__label">FAVORITOS</span>
+        <span class="stat-card__icon-right">♡</span>
+      </div>
+      <p class="stat-card__number"><%= @stats[:favoritos] %></p>
+      <p class="stat-card__desc">mangás na sua lista</p>
+
+      <div class="stat-covers-grid">
+        <% @recent_covers.each do |entry| %>
+          <div class="stat-cover-thumb">
+            <% if entry.cover_url.present? %>
+              <img src="<%= entry.cover_url %>" alt="<%= entry.title %>" loading="lazy"
+                   onerror="this.parentElement.innerHTML='📚'">
+            <% else %>
+              <span>📚</span>
+            <% end %>
+          </div>
+        <% end %>
+        <% extra = @stats[:favoritos] - @recent_covers.size %>
+        <% if extra > 0 %>
+          <div class="stat-cover-thumb stat-cover-thumb--more">+<%= extra %></div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Concluídos %>
+    <div class="stat-card stat-card--dark">
+      <div class="stat-card__header">
+        <span class="stat-card__icon">✓</span>
+        <span class="stat-card__label">CONCLUÍDOS</span>
+      </div>
+      <p class="stat-card__number"><%= @stats[:concluidos] %></p>
+      <p class="stat-card__desc">séries terminadas</p>
+      <div class="stat-card__trend">
+        <span class="trend-up">↑</span>
+        <span class="trend-label">este</span>
+        <br>
+        <span class="trend-highlight">+<%= @stats[:concluidos_mes] %></span>
+        <span class="trend-label">mês</span>
+      </div>
+    </div>
+
+    <%# Páginas %>
+    <div class="stat-card stat-card--dark stat-card--full">
+      <div class="stat-card__header">
+        <span class="stat-card__icon">📖</span>
+        <span class="stat-card__label">PÁGINAS</span>
+      </div>
+      <p class="stat-card__number stat-card__number--lg"><%= number_with_delimiter(@stats[:paginas], delimiter: ".") %></p>
+      <p class="stat-card__desc">lidas no total</p>
+      <p class="stat-card__equiv">≈ <%= (@stats[:paginas] / 450.0).round %> vols. físicos</p>
+    </div>
+
+  </div>
+
+  <%# ── CTA Planos ── %>
+  <% unless @user[:vip] %>
+    <div class="mt-8 plans-cta">
+      <p class="text-manga-muted text-sm mb-3">Desbloqueie borda VIP, badges exclusivos e muito mais</p>
+      <%= link_to "👑 Seja VIP", plans_path, class: "btn-primary w-full text-center justify-center" %>
+    </div>
+  <% end %>
+
+</div>

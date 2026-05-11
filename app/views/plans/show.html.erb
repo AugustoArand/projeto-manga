@@ -1,0 +1,140 @@
+<% content_for :title, "Seja VIP — Planos" %>
+
+<div class="max-w-2xl mx-auto px-4 py-8 sm:px-6">
+
+  <%# ── Cabeçalho ── %>
+  <div class="flex items-end justify-between mb-6">
+    <div>
+      <p class="text-manga-neon text-xs uppercase tracking-widest mb-1 flex items-center gap-1">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v2h14v-2z"/></svg>
+        assinatura
+      </p>
+      <h1 class="font-manga-display text-3xl tracking-wider text-manga-neon" style="text-decoration: underline; text-underline-offset: 6px;">seja VIP</h1>
+    </div>
+    <%= link_to profile_path, class: "flex items-center gap-1 text-manga-muted hover:text-manga-text transition-colors text-sm" do %>
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      voltar
+    <% end %>
+  </div>
+
+  <%# ── Benefícios grid ── %>
+  <div class="vip-benefits-grid mb-8">
+
+    <%# Card principal – inclui %>
+    <div class="vip-main-card">
+      <p class="vip-main-card__eyebrow">VIP INCLUI</p>
+      <p class="vip-main-card__headline">sem anúncios.<br>tudo offline.<br>capítulos antes.</p>
+      <div class="vip-main-card__tags">
+        <span class="vip-tag">HD</span>
+        <span class="vip-tag">offline</span>
+        <span class="vip-tag">sem ads</span>
+        <span class="vip-tag">7 dias antes</span>
+      </div>
+    </div>
+
+    <%# Coluna direita %>
+    <div class="vip-side-cards">
+      <div class="vip-side-card vip-side-card--pink">
+        <p class="vip-side-card__title">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v2h14v-2z"/></svg>
+          borda VIP
+        </p>
+        <p class="vip-side-card__desc">anel rosa exclusivo no seu avatar</p>
+      </div>
+
+      <div class="vip-side-card vip-side-card--dark">
+        <p class="vip-side-card__title">
+          🏆 +2x xp
+        </p>
+        <p class="vip-side-card__desc">desbloqueie badges 2x mais rápido</p>
+      </div>
+    </div>
+
+  </div>
+
+  <%# ── Planos ── %>
+  <h2 class="font-manga-display text-2xl tracking-wider text-manga-text mb-1">escolha seu plano</h2>
+  <p class="text-manga-muted text-sm mb-5">cancele quando quiser</p>
+
+  <div class="plans-list" data-controller="plans">
+    <% @plans.each do |plan| %>
+      <label class="plan-option <%= 'plan-option--popular' if plan[:popular] %>" data-plans-target="option">
+        <input type="radio" name="plan" value="<%= plan[:id] %>" class="plan-option__radio"
+               <%= 'checked' if plan[:popular] %>>
+        <div class="plan-option__body">
+          <div class="plan-option__left">
+            <div class="plan-option__radio-circle"></div>
+            <div>
+              <div class="plan-option__name-row">
+                <span class="plan-option__name"><%= plan[:label] %></span>
+                <% if plan[:tag] %>
+                  <span class="plan-option__tag"><%= plan[:tag] %></span>
+                <% end %>
+              </div>
+              <% if plan[:note] %>
+                <p class="plan-option__note <%= plan[:popular] ? 'plan-option__note--save' : '' %>">
+                  <%= plan[:note] %>
+                </p>
+              <% end %>
+            </div>
+          </div>
+          <div class="plan-option__price-wrap">
+            <span class="plan-option__currency">R$</span>
+            <span class="plan-option__price"><%= plan[:price] %></span>
+            <% if plan[:period].present? %>
+              <span class="plan-option__period"><%= plan[:period] %></span>
+            <% end %>
+          </div>
+        </div>
+      </label>
+    <% end %>
+  </div>
+
+  <%# ── Botão + Pagamento ── %>
+  <div class="mt-6">
+    <button class="btn-primary w-full justify-center text-base py-4" id="btn-assinar">
+      👑 Assinar agora
+    </button>
+    <p class="text-center text-manga-muted text-xs mt-3">Pagamento via PIX ou QR Code</p>
+  </div>
+
+  <%# ── Modal QR Code ── %>
+  <div id="pix-modal" class="pix-modal hidden">
+    <div class="pix-modal__backdrop" id="pix-backdrop"></div>
+    <div class="pix-modal__box">
+      <button class="pix-modal__close" id="pix-close">✕</button>
+      <h3 class="font-manga-display text-2xl tracking-wider gradient-text mb-1">pagamento via PIX</h3>
+      <p class="text-manga-muted text-xs mb-5">escaneie o QR Code ou copie a chave</p>
+
+      <div class="pix-qr-placeholder">
+        <div class="pix-qr-inner">
+          <svg width="64" height="64" fill="none" stroke="var(--color-manga-neon)" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+          </svg>
+          <p class="text-manga-muted text-xs mt-3">QR Code gerado após confirmação</p>
+        </div>
+      </div>
+
+      <div class="pix-key-box">
+        <span class="pix-key-text">mangaverse@pix.com.br</span>
+        <button class="pix-copy-btn" onclick="navigator.clipboard.writeText('mangaverse@pix.com.br'); this.textContent='copiado ✓'">
+          copiar
+        </button>
+      </div>
+
+      <p class="text-center text-manga-muted text-xs mt-4">Após o pagamento, seu VIP é ativado em até 5 minutos.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const btn = document.getElementById('btn-assinar');
+  const modal = document.getElementById('pix-modal');
+  const backdrop = document.getElementById('pix-backdrop');
+  const closeBtn = document.getElementById('pix-close');
+
+  btn.addEventListener('click', () => modal.classList.remove('hidden'));
+  backdrop.addEventListener('click', () => modal.classList.add('hidden'));
+  closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+</script>

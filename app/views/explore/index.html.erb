@@ -109,6 +109,65 @@
   <% end %>
 
   <%# ═══════════════════════════════════════════ %>
+  <%# HISTÓRICO                                    %>
+  <%# ═══════════════════════════════════════════ %>
+  <% if @history.any? %>
+  <section class="explore-section" id="historico">
+    <div class="section-header">
+      <div>
+        <h2 class="section-header__title font-manga-display">
+          <span class="section-header__icon">📖</span>
+          <span class="gradient-text">HISTÓRICO</span>
+        </h2>
+        <p class="section-header__subtitle">Continue de onde parou</p>
+      </div>
+    </div>
+
+    <div class="scroll-row-wrapper" data-controller="scroll-row">
+      <button class="scroll-row__btn scroll-row__btn--prev" data-action="click->scroll-row#scrollLeft" data-scroll-row-target="prevBtn" aria-label="Scroll esquerda">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="scroll-row" data-scroll-row-target="container">
+        <% @history.first(8).each do |entry| %>
+          <div class="history-card">
+            <div class="history-card__cover">
+              <% if entry.manga.present? && entry.manga.cover.attached? %>
+                <img src="<%= url_for(entry.manga.cover) %>" alt="<%= entry.title %>" loading="lazy"
+                     onerror="this.src='https://placehold.co/200x300/1E1E24/E040FB?text=Cover&font=playfair-display'">
+              <% elsif entry.cover_url.present? %>
+                <img src="<%= entry.cover_url %>" alt="<%= entry.title %>" loading="lazy"
+                     onerror="this.src='https://placehold.co/200x300/1E1E24/E040FB?text=Cover&font=playfair-display'">
+              <% else %>
+                <div class="history-card__placeholder">📚</div>
+              <% end %>
+            </div>
+            <div class="history-card__info">
+              <h4 class="history-card__title"><%= entry.title %></h4>
+              <p class="history-card__genre"><%= entry.genre %></p>
+              <p class="history-card__time"><%= time_ago_in_words(entry.updated_at) %> atrás</p>
+            </div>
+            <% if entry.manga.present? %>
+              <%= link_to manga_path(entry.manga), class: "history-card__link" do %>
+                <span>Continuar</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              <% end %>
+            <% elsif entry.mangadex_id.present? %>
+              <a href="https://mangadex.org/title/<%= entry.mangadex_id %>" target="_blank" rel="noopener" class="history-card__link">
+                <span>MangaDex</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <button class="scroll-row__btn scroll-row__btn--next" data-action="click->scroll-row#scrollRight" data-scroll-row-target="nextBtn" aria-label="Scroll direita">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+  <% end %>
+
+  <%# ═══════════════════════════════════════════ %>
   <%# POPULARES                                    %>
   <%# ═══════════════════════════════════════════ %>
   <% if @popular.any? %>
@@ -192,65 +251,6 @@
                    category: cat,
                    icon: category_icons[cat[:name]] || "📚" %>
       <% end %>
-    </div>
-  </section>
-  <% end %>
-
-  <%# ═══════════════════════════════════════════ %>
-  <%# HISTÓRICO                                    %>
-  <%# ═══════════════════════════════════════════ %>
-  <% if @history.any? %>
-  <section class="explore-section" id="historico">
-    <div class="section-header">
-      <div>
-        <h2 class="section-header__title font-manga-display">
-          <span class="section-header__icon">📖</span>
-          <span class="gradient-text">HISTÓRICO</span>
-        </h2>
-        <p class="section-header__subtitle">Continue de onde parou</p>
-      </div>
-    </div>
-
-    <div class="scroll-row-wrapper" data-controller="scroll-row">
-      <button class="scroll-row__btn scroll-row__btn--prev" data-action="click->scroll-row#scrollLeft" data-scroll-row-target="prevBtn" aria-label="Scroll esquerda">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <div class="scroll-row" data-scroll-row-target="container">
-        <% @history.each do |entry| %>
-          <div class="history-card">
-            <div class="history-card__cover">
-              <% if entry.manga.present? && entry.manga.cover.attached? %>
-                <img src="<%= url_for(entry.manga.cover) %>" alt="<%= entry.title %>" loading="lazy"
-                     onerror="this.src='https://placehold.co/200x300/1E1E24/E040FB?text=Cover&font=playfair-display'">
-              <% elsif entry.cover_url.present? %>
-                <img src="<%= entry.cover_url %>" alt="<%= entry.title %>" loading="lazy"
-                     onerror="this.src='https://placehold.co/200x300/1E1E24/E040FB?text=Cover&font=playfair-display'">
-              <% else %>
-                <div class="history-card__placeholder">📚</div>
-              <% end %>
-            </div>
-            <div class="history-card__info">
-              <h4 class="history-card__title"><%= entry.title %></h4>
-              <p class="history-card__genre"><%= entry.genre %></p>
-              <p class="history-card__time"><%= time_ago_in_words(entry.updated_at) %> atrás</p>
-            </div>
-            <% if entry.manga.present? %>
-              <%= link_to manga_path(entry.manga), class: "history-card__link" do %>
-                <span>Continuar</span>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-              <% end %>
-            <% elsif entry.mangadex_id.present? %>
-              <a href="https://mangadex.org/title/<%= entry.mangadex_id %>" target="_blank" rel="noopener" class="history-card__link">
-                <span>MangaDex</span>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-              </a>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
-      <button class="scroll-row__btn scroll-row__btn--next" data-action="click->scroll-row#scrollRight" data-scroll-row-target="nextBtn" aria-label="Scroll direita">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      </button>
     </div>
   </section>
   <% end %>

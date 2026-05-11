@@ -132,11 +132,124 @@ class MangadexService
       popular(limit: limit)
     end
 
+    # ── Busca por título ──
+    def search(query, limit: 20)
+      return [] if query.blank?
+
+      params = {
+        "title"                          => query,
+        "limit"                          => limit,
+        "includes[]"                     => %w[cover_art author],
+        "contentRating[]"                => %w[safe suggestive],
+        "availableTranslatedLanguage[]"  => "pt-br",
+        "order[relevance]"               => "desc"
+      }
+      data = get("/manga", params)
+      parse_manga_list(data)
+    rescue => e
+      Rails.logger.error("[MangaDex] search error: #{e.message}")
+      []
+    end
+
+    # ── Capítulos de um mangá (MangaDex) ──
+    def manga_chapters(manga_id, limit: 100, lang: "pt-br", offset: 0)
+      Rails.cache.fetch("mangadex:chapters:#{manga_id}:#{lang}:#{offset}", expires_in: CACHE_TTL) do
+        params = {
+          "limit"                  => limit,
+          "offset"                 => offset,
+          "translatedLanguage[]"   => lang,
+          "order[chapter]"         => "asc",
+          "includes[]"             => "scanlation_group",
+          "contentRating[]"        => %w[safe suggestive erotica pornographic]
+        }
+        data = get("/manga/#{manga_id}/feed", params)
+        return [] unless data && data["data"]
+
+        data["data"].map do |ch|
+          attrs = ch["attributes"] || {}
+          group = (ch["relationships"] || []).find { |r| r["type"] == "scanlation_group" }
+          {
+            id:         ch["id"],
+            chapter:    attrs["chapter"],
+            title:      attrs["title"],
+            volume:     attrs["volume"],
+            pages:      attrs["pages"],
+            lang:       attrs["translatedLanguage"],
+            published:  attrs["publishAt"],
+            group:      group&.dig("attributes", "name")
+          }
+        end
+      end
+    rescue => e
+      Rails.logger.error("[MangaDex] manga_chapters error: #{e.message}")
+      []
+    end
+
+    # ── Páginas de um capítulo via at-home server ──
+    def chapter_pages(chapter_id, data_saver: false)
+      Rails.cache.fetch("mangadex:pages:#{chapter_id}:#{data_saver}", expires_in: CACHE_TTL) do
+        server_data = get("/at-home/server/#{chapter_id}", {})
+        return nil unless server_data && server_data["baseUrl"]
+
+        base_url    = server_data["baseUrl"]
+        ch          = server_data["chapter"]
+        hash        = ch["hash"]
+        filenames   = data_saver ? ch["dataSaver"] : ch["data"]
+        quality_key = data_saver ? "data-saver" : "data"
+
+        {
+          chapter_id: chapter_id,
+          base_url:   base_url,
+          hash:       hash,
+          pages: filenames.map.with_index(1) do |filename, i|
+            {
+              number:    i,
+              filename:  filename,
+              image_url: "#{base_url}/#{quality_key}/#{hash}/#{filename}"
+            }
+          end
+        }
+      end
+    rescue => e
+      Rails.logger.error("[MangaDex] chapter_pages error: #{e.message}")
+      nil
+    end
+
+    # ── MDList — Status de leitura ──
+    def set_reading_status(manga_id, status, token)
+      # status: "reading" | "on_hold" | "dropped" | "plan_to_read" | "completed" | "re_reading" | nil
+      post("/manga/#{manga_id}/status", { status: status }, token: token)
+    end
+
+    def follow_manga(manga_id, token)
+      post("/manga/#{manga_id}/follow", {}, token: token)
+    end
+
+    def unfollow_manga(manga_id, token)
+      delete("/manga/#{manga_id}/follow", token: token)
+    end
+
+    def reading_status(manga_id, token)
+      get("/manga/#{manga_id}/status", {}, token: token)
+    end
+
+    # ── MDList — Listas customizadas ──
+    def get_lists(token)
+      get("/user/list", {}, token: token)
+    end
+
+    def create_list(name, visibility, manga_ids = [], token:)
+      post("/list", { name: name, visibility: visibility, manga: manga_ids }, token: token)
+    end
+
+    def update_list(list_id, manga_ids, version, token)
+      put("/list/#{list_id}", { manga: manga_ids, version: version }, token: token)
+    end
+
     private
 
-    def get(path, params)
+    def get(path, params, token: nil)
       uri = URI("#{BASE_URL}#{path}")
-      # Build query string handling arrays properly
       query_parts = []
       params.each do |key, value|
         if value.is_a?(Array)
@@ -148,18 +261,71 @@ class MangadexService
       uri.query = query_parts.join("&") unless query_parts.empty?
 
       request = Net::HTTP::Get.new(uri)
-      request["User-Agent"] = "MangaVerse/1.0"
-      request["Accept"] = "application/json"
+      set_common_headers(request, token)
 
-      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|
+      execute(uri, request)
+    end
+
+    def post(path, body, token: nil)
+      uri     = URI("#{BASE_URL}#{path}")
+      request = Net::HTTP::Post.new(uri)
+      set_common_headers(request, token)
+      request["Content-Type"] = "application/json"
+      request.body = body.to_json
+      execute(uri, request)
+    end
+
+    def put(path, body, token: nil)
+      uri     = URI("#{BASE_URL}#{path}")
+      request = Net::HTTP::Put.new(uri)
+      set_common_headers(request, token)
+      request["Content-Type"] = "application/json"
+      request.body = body.to_json
+      execute(uri, request)
+    end
+
+    def delete(path, token: nil)
+      uri     = URI("#{BASE_URL}#{path}")
+      request = Net::HTTP::Delete.new(uri)
+      set_common_headers(request, token)
+      execute(uri, request)
+    end
+
+    # Multipart upload — files is an array of { name:, data:, content_type: }
+    def post_multipart(path, files, token: nil)
+      uri      = URI("#{BASE_URL}#{path}")
+      boundary = "----MangaVerseBoundary#{SecureRandom.hex(8)}"
+      request  = Net::HTTP::Post.new(uri)
+      set_common_headers(request, token)
+      request["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
+
+      parts = files.map do |f|
+        "--#{boundary}\r\n" \
+        "Content-Disposition: form-data; name=\"files[]\"; filename=\"#{f[:name]}\"\r\n" \
+        "Content-Type: #{f[:content_type]}\r\n\r\n" +
+        f[:data] + "\r\n"
+      end
+      request.body = parts.join + "--#{boundary}--\r\n"
+
+      execute(uri, request)
+    end
+
+    def set_common_headers(request, token)
+      request["User-Agent"] = "MangaVerse/1.0"
+      request["Accept"]     = "application/json"
+      request["Authorization"] = "Bearer #{token}" if token.present?
+    end
+
+    def execute(uri, request)
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 30) do |http|
         http.request(request)
       end
 
       if response.is_a?(Net::HTTPSuccess)
         JSON.parse(response.body)
       else
-        Rails.logger.warn("[MangaDex] HTTP #{response.code}: #{response.message} for #{path}")
-        nil
+        Rails.logger.warn("[MangaDex] HTTP #{response.code}: #{response.message} for #{uri.path}")
+        { "error" => response.message, "code" => response.code.to_i }
       end
     end
 
