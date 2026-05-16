@@ -43,7 +43,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # Google Cloud Storage for Active Storage
-gem "google-cloud-storage", "~> 1.44", require: false
+gem "google-cloud-storage", "~> 1.60", require: false
 
 # CORS para o app mobile (Expo/React Native)
 gem "rack-cors"
